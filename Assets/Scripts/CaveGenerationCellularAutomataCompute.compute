@@ -1,0 +1,60 @@
+#pragma kernel Generate
+#pragma kernel Smooth
+
+RWTexture2D<float4> _Result;
+RWTexture2D<float4> _Temp;
+
+int _Resolution;
+float _RandomFillPercentage;
+int _Seed;
+int _WallMargin;
+int _TerrainMargin;
+
+float rand(uint3 id)
+{
+    float2 coords = float2(id.x / (float)_Resolution * (abs(sin(_Seed))), id.y / (float)_Resolution * (abs(sin(_Seed))));
+    return (frac(sin(dot(coords.xy, float2(12.9898, 78.233))) * 43758.5453)) * 1;
+}
+
+static const uint2 offsets[] =
+{
+    uint2(0,1),
+    uint2(0,-1),
+    uint2(-1,0),
+    uint2(1,0),
+    uint2(1,1),
+    uint2(-1,-1),
+    uint2(1,-1),
+    uint2(-1,1)
+};
+
+bool CheckBounds(uint2 position)
+{
+    return position.x >= 0 && position.y >= 0 && (position.x < (uint)_Resolution) && (position.y < (uint)_Resolution);
+}
+
+[numthreads(8,8,1)]
+void Generate(uint3 id : SV_DispatchThreadID)
+{
+    float random = rand(id);
+    random = (random < _RandomFillPercentage) ? 1 : 0;
+    _Result[id.xy] = float4(random, random, random, 1);
+}
+
+[numthreads(8,8,1)]
+void Smooth(uint3 id : SV_DispatchThreadID)
+{
+    int filledNeighbors = 0;
+
+    for(int i = 0; i < 8; i++)
+    {
+        uint2 neighbor = id.xy + offsets[i];
+        if(CheckBounds(neighbor))
+        {
+            filledNeighbors += (int)_Temp[neighbor].x;
+        }
+    }
+
+    float fill = (filledNeighbors > _WallMargin) ? 1 : ((filledNeighbors < _TerrainMargin) ? 0 : (int)_Temp[id.xy].x);//!!!!random
+    _Result[id.xy] = float4(fill, fill, fill, 1);
+}
