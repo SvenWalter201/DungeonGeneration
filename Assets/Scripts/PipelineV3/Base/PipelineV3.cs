@@ -22,6 +22,7 @@ namespace PipelineV3
 		public abstract void Initialize();
 		public abstract void Clear();
 		public abstract void Spawn(string type, DesignElement dE);
+		public abstract void FinalizeEnvironment();
 		public abstract SpawnEnvironment Clone();
 			
 	}
@@ -34,7 +35,14 @@ namespace PipelineV3
 		}
 		protected GenericLevel levelReference;	
 		public abstract void Spawn(); //depending on the data structures used in Spawn environment, do some things, maybe instantiate DE	
-		public abstract void Mutate();
+		protected abstract void Mutate();
+		public abstract bool CheckValidity();
 		public abstract DesignElement Clone(GenericLevel newOwner);
+		public void Mutation()
+		{
+			Mutate();
+			if(!CheckValidity())
+				levelReference.RemoveDesignElement(this);
+		}
 	}
 }

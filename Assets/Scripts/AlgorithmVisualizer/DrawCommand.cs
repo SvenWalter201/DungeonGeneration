@@ -11,15 +11,17 @@ public class DrawCommand
     public DrawCommandType type;
     public Vector3[] vertices;
     public Vector3 position;
+    public Vector2 size;
     public Color color;
     public string text;
     public Sprite sprite;
-    public static DrawCommand DrawUITexture(Vector3 position, Sprite sprite)
+    public static DrawCommand DrawUITexture(Vector3 position, Sprite sprite, Vector2 size)
     {
         var dc = new DrawCommand();
         dc.sprite = sprite;
         dc.position = position;
         dc.type = DrawCommandType.ui;
+        dc.size = size;
         return dc;
     }
 

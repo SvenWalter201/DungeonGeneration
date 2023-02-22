@@ -197,6 +197,7 @@ public class AlgoVizUI : MonoBehaviour
                     instance.transform.SetParent(algoVizCanvas, false);
                     currentlyRenderedAlgoVizObjects.Add(instance.gameObject);
                     instance.sprite = currentDrawCommand.sprite;
+                    instance.rectTransform.sizeDelta = currentDrawCommand.size;
                     break;
                 }
             }

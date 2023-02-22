@@ -26,7 +26,7 @@ public class GenericLevel : System.IComparable<GenericLevel>
 		Mutation mutationFunction;
 		Crossover crossoverFunction;
 		public int fitness, violatedConstraints;
-		public bool canBeSelected;
+		public bool canBeSelected, recentlyAdded = false;
 
         public int TotalDesignElementCount 
         {
@@ -88,20 +88,23 @@ public class GenericLevel : System.IComparable<GenericLevel>
         public void AddDesignElements(List<DesignElement> designElements)
         {
             foreach (var de in designElements)
-            {
                 AddDesignElement(de);
-            }
+            
         }
 
-		public void AddDesignElement(DesignElement designElement)
+		public bool AddDesignElement(DesignElement designElement)
 		{
+			if(!designElement.CheckValidity())
+				return false;
+				
             var type = designElement.GetType();
 			if(sortedList.ContainsKey(type))
 			{
 				sortedList[type].Add(designElement);
-				return;
+				return true;
 			}
 			sortedList.Add(type, new List<DesignElement>{ designElement });
+			return true;
 		}
 
         public void RemoveDesignElement(DesignElement designElement)

@@ -10,9 +10,9 @@ public class MazeGenerationExecutor : EvolutionaryAlgorithmExecutor
             maxCrossovers = MazeBuilderMetrics.MAX_CROSSOVERS,
             populationSize = MazeBuilderMetrics.POP_SIZE,
             maxGenerations = MazeBuilderMetrics.MAX_GENERATIONS,
-            selectionStrategy = SelectionStrategy.RouletteSelection,
-            insertionStrategy = InsertionStrategy.RouletteReplacement,
-            populationTransitionStrategy = InsertionStrategy.RouletteReplacement
+            selectionStrategy = SelectionStrategy.RankSelection,
+            insertionStrategy = InsertionStrategy.RandomEliteReplacement,
+            populationTransitionStrategy = InsertionStrategy.RandomEliteReplacement
         };
 
         var l1 = new MazeLevelGenerator(genericParams);

@@ -7,9 +7,14 @@ namespace PipelineV3.Dungeon
 {
     public class DungeonGenerator : EvolutionaryAlgorithmLayer
     {
+
+        public override GenericLevel CreateMember()
+        {
+            throw new System.NotImplementedException();
+        }
         public DungeonGenerator(GenericParameters genericParams) : base(genericParams){}
 
-        protected override void EndOfGenerationCallback(int currentGeneration)
+        protected override void EndOfGenerationCallback(GenerationInformation currentGeneration)
         {
         }
 
@@ -31,15 +36,6 @@ namespace PipelineV3.Dungeon
         {
             return 0;
         }
-
-
-
-        public override void InitializePopulation(GenericLevel previousLayerSolution)
-        {
-            iPop = new Population(genericParams, DungeonGenerationMetrics.POP_SIZE, false);
-            fPop = new Population(genericParams, DungeonGenerationMetrics.POP_SIZE, true);
-        }
-
 
     }
 
@@ -70,7 +66,18 @@ namespace PipelineV3.Dungeon
 
 /*
 Rooms with Indizes 
-Doors in Rooms 
+Doors in Rooms
+
+DesignElements: 
+
+Room Elements: 
+
+- LL Corner
+- Width, Length
+- Door positions along the edges (up to m doors)
+
+
+
 
 n Lock Elements: 
  - lock index

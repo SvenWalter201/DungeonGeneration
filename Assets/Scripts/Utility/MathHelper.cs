@@ -8,7 +8,7 @@ public static class MathHelper
 
     public static int getIndex(int2 pos, int width) =>
         pos.x + pos.y * width;  
-  
+
     public static int2 getPos(int index, int width)
     {
         int x = index % width;
