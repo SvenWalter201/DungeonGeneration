@@ -38,8 +38,8 @@ namespace PipelineV3.Maze
             {
                 case "OccupiedCell":
                 {
-                    var castDE = (OccupiedCellMazeDesignElement)dE;
-                    var cell = grid[MazeBuilderMetrics.GetIndex(castDE.x, castDE.y)];
+                    var cellDE = (OccupiedCellMazeDesignElement)dE;
+                    var cell = grid[MazeBuilderMetrics.GetIndex(cellDE.x, cellDE.y)];
                     if(!cell.occupied)
                     {
                         cell.occupied = true;
@@ -49,12 +49,11 @@ namespace PipelineV3.Maze
                 }
                 case "Wall":
                 {
-                    var castDE = (MazeWallDesignElement)dE;
-                    var offset = castDE.horizontal ? new int2(1,0) : new int2(0,1);
-                    var start = new int2(castDE.startX, castDE.startY);
-                    for (int i = 0; i < castDE.length; i++)
+                    var wallDE = (MazeWallDesignElement)dE;
+                    var offset = wallDE.horizontal ? new int2(1,0) : new int2(0,1);
+                    for (int i = 0; i < wallDE.length; i++)
                     {
-                        var offsetCoordinate = start + offset * i;
+                        var offsetCoordinate = wallDE.startPosition + offset * i;
                         if(!MathHelper.isInBounds(offsetCoordinate, MazeBuilderMetrics.WIDTH, MazeBuilderMetrics.HEIGHT))
                             break;
                         var cell = grid[MazeBuilderMetrics.GetIndex(offsetCoordinate.x, offsetCoordinate.y)];
@@ -66,6 +65,44 @@ namespace PipelineV3.Maze
                         }
                     }
 
+                    break;
+                }
+                case "Room":
+                {
+                    var roomDE = (MazeRoomDesignElement)dE;
+                    for (int x = 0; x < roomDE.width; x++)
+                    {
+                        for (int y = 0; y < roomDE.height; y++)
+                        {
+                            var currentPosition = new int2(x,y) + roomDE.lLPosition;
+                            var cell = grid[MazeBuilderMetrics.GetIndex(currentPosition.x, currentPosition.y)];
+
+                            //WALL
+                            if(x == 0 || y == 0 || x == roomDE.width - 1 || y == roomDE.height - 1)
+                            {
+                                if(!cell.occupied)
+                                    blockedCellsAmount++;
+
+                                cell.occupied = true;                                
+                                continue;
+                            }
+
+                            if(cell.occupied)
+                                blockedCellsAmount--;
+
+                            cell.occupied = false;
+                        }
+                    }
+                    for (int i = 0; i < roomDE.doorPositions.Count; i++)
+                    {
+                        var currentDoorPosition = roomDE.doorPositions[i];
+                        var cell = grid[MazeBuilderMetrics.GetIndex(currentDoorPosition.x, currentDoorPosition.y)];
+
+                        if(cell.occupied)
+                            blockedCellsAmount--;
+
+                        cell.occupied = false;
+                    }
                     break;
                 }
             }

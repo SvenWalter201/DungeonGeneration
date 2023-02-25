@@ -111,6 +111,60 @@ namespace PipelineV3
 			return null;
 		}
 
+		GenericLevel InverseRouletteSelect()
+		{
+			float sum = 0;
+			if(isFpop)
+			{
+				foreach (var current in members)
+					sum += (1.0f / (float)current.fitness);
+				
+				float r = UnityEngine.Random.Range(0, sum);
+				for (int i = Count - 1; i >= 0; i--)
+				{
+					var current = members[i];
+					sum -= (1.0f / (float)current.fitness);
+					if(sum < r)
+						return current;
+				}		
+			}
+			else
+			{
+				foreach (var current in members)
+					sum += current.violatedConstraints;
+
+				float r = UnityEngine.Random.Range(0, sum);
+				for (int i = Count - 1; i >= 0; i--)
+				{
+					var current = members[i];
+					sum -= current.violatedConstraints;
+					if(sum < r)
+						return current;
+				}		
+			}
+			
+			return null;
+		}
+
+		GenericLevel InverseRankSelect()
+		{
+			int summedRank = 0;
+			for (int i = 0; i < Count; i++)
+				summedRank += (i+1);
+
+			int r = UnityEngine.Random.Range(0, summedRank);
+
+			for (int i = 0; i < Count; i++)
+			{
+				var current = members[i];
+				summedRank -= i;
+				if(summedRank <= r)
+					return current;
+			}	
+	
+			return null;
+		}
+
 		public int AddAndReduce(List<GenericLevel> newLevels)
 		{
 			foreach (var level in newLevels)
@@ -118,8 +172,24 @@ namespace PipelineV3
 			
 			members.AddRange(newLevels);
 			Sort();
-			if(members.Count > genericParams.populationSize)
-				members.RemoveRange(genericParams.populationSize, members.Count - genericParams.populationSize);
+			while(members.Count > genericParams.populationSize)
+			{
+				GenericLevel selectedLevel = null;
+				switch(genericParams.insertionStrategy)
+				{
+					case InsertionStrategy.RouletteReplacement:
+						selectedLevel = InverseRouletteSelect(); 
+						break;
+					
+					case InsertionStrategy.RankReplacement:
+						selectedLevel = InverseRankSelect();
+						break;
+					case InsertionStrategy.AbsoluteFitnessReplacement:
+						selectedLevel = members[members.Count - 1];
+						break;
+				}
+				members.Remove(selectedLevel);
+			}
 
 			int newMembersCount = 0;
 			foreach (var level in members)

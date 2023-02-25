@@ -76,6 +76,24 @@ public class AlgoVizUI : MonoBehaviour
         plots.Clear();
     }
     
+    public void CreateMultiPlot(string plotName, List<List<float>> values)
+    {
+        int index = plots.Count;
+
+        var plotButtonInstance = Instantiate(plotButtonPrefab);
+        plotButtonInstance.transform.SetParent(plotSelectionArea, false);
+        plotButtonInstance.onClick = new Button.ButtonClickedEvent();
+        plotButtonInstance.onClick.AddListener(delegate { ToggleButton(index); });
+
+        var label = plotButtonInstance.GetComponentInChildren<TMP_Text>();
+        label.text = plotName;
+        buttons.Add(plotButtonInstance);
+
+        var plotInstance = Instantiate(plotPrefab);
+        plotInstance.transform.SetParent(plotContainer, false);
+        plotInstance.CreateMultiPlot(plotName, values);
+        plots.Add(plotInstance);
+    }
 
     public void CreatePlot(string plotName, List<float> values)
     {
@@ -140,7 +158,7 @@ public class AlgoVizUI : MonoBehaviour
         var label = btnInstance.GetComponentInChildren<TMP_Text>();
         label.text = name;
 
-        btnInstance.onClick.AddListener(delegate { executor.Execute(); });
+        btnInstance.onClick.AddListener(delegate {  ResetUI(); executor.Execute(); });
     }
 
     public void TogglePopup()

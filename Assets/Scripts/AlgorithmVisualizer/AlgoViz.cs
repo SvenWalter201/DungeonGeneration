@@ -96,6 +96,29 @@ public class AlgoViz : MonoBehaviour
         }
     }
 
+    public static void CreateMultiPlot(string suffix)
+    {
+        if(!Instance.recording)
+            return;
+
+        var plots = new List<List<float>>();
+
+        foreach(var key in Instance.plots.Keys)
+        {
+            if(key.Contains(suffix))
+                plots.Add(Instance.plots[key]);
+        }
+
+        if(plots.Count > 0)
+        {
+            Instance.uiReference.CreateMultiPlot(suffix, plots);
+        }
+        else
+        {
+            Debug.LogWarning($"No Plots with Suffix: {suffix} exist");
+        }
+    }
+
     public static void CreatePlot(string plotIdentifier)
     {
         if(!Instance.recording)

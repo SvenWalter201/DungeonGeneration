@@ -8,17 +8,24 @@ namespace PipelineV3.Maze
     {
         protected override void ExecutionFinishedCallback(int currentGeneration)
         {
-            AlgoViz.CreatePlot("fPopSize");
-            AlgoViz.CreatePlot("maxFitness");
-            AlgoViz.CreatePlot("minVio");
-            AlgoViz.CreatePlot("amountDE");
-            AlgoViz.CreatePlot("amountWalls");
-            AlgoViz.CreatePlot("invalidationRate");
-            AlgoViz.CreatePlot("validationRate");
-            AlgoViz.CreatePlot("iPopIntegrationRate");
-            AlgoViz.CreatePlot("fPopIntegrationRate");
-            AlgoViz.CreatePlot("diversityIPop");
-            AlgoViz.CreatePlot("diversityFPop");
+            //AlgoViz.CreatePlot("fPopSize");
+            AlgoViz.CreateMultiPlot("maxFitness");
+            AlgoViz.CreateMultiPlot("minVio");
+            //AlgoViz.CreatePlot("amountDE");
+            //AlgoViz.CreatePlot("amountWalls");
+            AlgoViz.CreateMultiPlot("invalidationRate");
+            AlgoViz.CreateMultiPlot("validationRate");
+            AlgoViz.CreateMultiPlot("iPopIntegrationRate");
+            AlgoViz.CreateMultiPlot("fPopIntegrationRate");
+            AlgoViz.CreateMultiPlot("diversityIPop");
+            AlgoViz.CreateMultiPlot("diversityFPop");
+            AlgoViz.CreateMultiPlot("avgMutF");
+            AlgoViz.CreateMultiPlot("avgMutI");
+            AlgoViz.CreateMultiPlot("mutValidationRate");
+            AlgoViz.CreateMultiPlot("mutInvalidationRate");
+            AlgoViz.CreateMultiPlot("fitnessDelta");
+            AlgoViz.CreateMultiPlot("constraintDelta");
+
         }
 
         protected override void EndOfGenerationCallback(GenerationInformation generationInformation)
@@ -41,15 +48,21 @@ namespace PipelineV3.Maze
             float averageWalls = countWalls / (float)(fPop.Count + iPop.Count);
 
             //Debug.Log($"Current Generation: {currentGeneration}");
-            AlgoViz.AddPlotPoint("fPopSize", fPop.Count);
-            AlgoViz.AddPlotPoint("maxFitness", fPop.Count > 0 ? fPop.members[0].fitness : 0);
-            AlgoViz.AddPlotPoint("minVio", iPop.Count > 0 ? iPop.members[0].violatedConstraints : 0);
-            AlgoViz.AddPlotPoint("amountDE", averageDEs);
-            AlgoViz.AddPlotPoint("amountWalls", averageWalls);
-            AlgoViz.AddPlotPoint("invalidationRate", generationInformation.invalidationRate);
-            AlgoViz.AddPlotPoint("validationRate", generationInformation.validationRate);
-            AlgoViz.AddPlotPoint("iPopIntegrationRate", generationInformation.iPopIntegrationRate);
-            AlgoViz.AddPlotPoint("fPopIntegrationRate", generationInformation.fPopIntegrationRate);
+            //AlgoViz.AddPlotPoint("fPopSize", fPop.Count);
+            AlgoViz.AddPlotPoint(label + "maxFitness", fPop.Count > 0 ? fPop.members[0].fitness : 0);
+            AlgoViz.AddPlotPoint(label + "minVio", iPop.Count > 0 ? iPop.members[0].violatedConstraints : 0);
+            //AlgoViz.AddPlotPoint("amountDE", averageDEs);
+            //AlgoViz.AddPlotPoint("amountWalls", averageWalls);
+            AlgoViz.AddPlotPoint(label + "invalidationRate", generationInformation.invalidationRate);
+            AlgoViz.AddPlotPoint(label + "validationRate", generationInformation.validationRate);
+            AlgoViz.AddPlotPoint(label + "iPopIntegrationRate", generationInformation.iPopIntegrationRate);
+            AlgoViz.AddPlotPoint(label + "fPopIntegrationRate", generationInformation.fPopIntegrationRate);
+            AlgoViz.AddPlotPoint(label + "avgMutF", generationInformation.averageAcceptedMutationRateFOffspring);
+            AlgoViz.AddPlotPoint(label + "avgMutI", generationInformation.averageAcceptedMutationRateIOffspring);
+            AlgoViz.AddPlotPoint(label + "mutValidationRate", generationInformation.mutationValidationRate);
+            AlgoViz.AddPlotPoint(label + "mutInvalidationRate", generationInformation.mutationInvalidationRate);
+            AlgoViz.AddPlotPoint(label + "fitnessDelta", generationInformation.averageMutationFitnessDelta);
+            AlgoViz.AddPlotPoint(label + "constraintDelta", generationInformation.averageMutationConstraintViolationDelta);
 
             DetermineGeneticDiversity();
 
@@ -90,8 +103,8 @@ namespace PipelineV3.Maze
             diversityIPop = iPopCellDiversitySum / (float)cellAmount;
             diversityFPop = fPopCellDiversitySum / (float)cellAmount;
 
-            AlgoViz.AddPlotPoint("diversityIPop", diversityIPop);
-            AlgoViz.AddPlotPoint("diversityFPop", diversityFPop);
+            AlgoViz.AddPlotPoint(label + "diversityIPop", diversityIPop);
+            AlgoViz.AddPlotPoint(label + "diversityFPop", diversityFPop);
 
         }
 

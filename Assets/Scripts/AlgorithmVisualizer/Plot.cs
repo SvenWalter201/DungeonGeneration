@@ -34,26 +34,82 @@ public class Plot : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void CreatePlot(string plotName, List<float> values)
+    public void CreateMultiPlot(string plotName, List<List<float>> plots) => 
+        StartCoroutine(CreateMultiPlotDelayed(plotName, plots));
+    
+
+    IEnumerator CreateMultiPlotDelayed(string plotName, List<List<float>> plots)
     {
-        StartCoroutine(CreatePlotDelayed(plotName, values));
+        int delayFrames = 3;
+        while(delayFrames > 0)
+        {
+            delayFrames--;
+            yield return null;
+        }
+        float paddedPlotWidth = PlotWidth - (AlgoVizUIMetrics.leftPadding + AlgoVizUIMetrics.rightPadding);
+
+        int maxLength = 0;
+
+        float minValue = float.MaxValue;
+        float maxValue = float.MinValue;
+
+        foreach (var plot in plots)
+        {
+            if(plot.Count > maxLength)
+                maxLength = plot.Count;
+
+            foreach (var value in plot)
+            {
+                if(value > maxValue)
+                    maxValue = value;
+                if(value < minValue)
+                    minValue = value;                
+            }
+        }
+
+        float spacePerPoint = paddedPlotWidth / (maxLength - 1);
+        float range = maxValue - minValue;
+
+        float rangeSegment = range / (float)AlgoVizUIMetrics.displaySegments;
+        float amountSegment = maxLength / (float)(AlgoVizUIMetrics.displaySegments);
+        float paddedPlotHeight = PlotHeight - (AlgoVizUIMetrics.bottomPadding + AlgoVizUIMetrics.topPadding);
+
+        float rangeSegmentSpacing = paddedPlotHeight / (float) AlgoVizUIMetrics.displaySegments;
+        float amountSegmentSpacing = paddedPlotWidth / (float) AlgoVizUIMetrics.displaySegments;
+
+        float verticalSpacePerUnit = paddedPlotHeight / range;
+
+        CreateHeader(plotName);
+        CreateDisplaySegmentsVertical(range, minValue, maxLength, rangeSegmentSpacing);
+        CreateDisplaySegmentsHorizontal(amountSegment, amountSegmentSpacing);     
+        int idx = 0;
+        foreach (var plot in plots)
+        {
+            PlotValues(plot, spacePerPoint, verticalSpacePerUnit, minValue, colors[idx]);
+            idx++;
+        }
+
+        gameObject.SetActive(false);
     }
+
+    Color[] colors = new Color[]{Color.red, Color.cyan, Color.magenta};
+    public void CreatePlot(string plotName, List<float> values) =>     
+        StartCoroutine(CreatePlotDelayed(plotName, values));
+
+    float PlotWidth => plotContainer.sizeDelta.x;
+    float PlotHeight => plotContainer.sizeDelta.y;
 
     IEnumerator CreatePlotDelayed(string plotName, List<float> values)
     {
-        int d = 3;
-        while(d > 0)
+        int delayFrames = 3;
+        while(delayFrames > 0)
         {
-            d--;
+            delayFrames--;
             yield return null;
         }
-        PlotPoint lastPoint = null;
-        float plotHeight = plotContainer.sizeDelta.y;
-        float plotWidth = plotContainer.sizeDelta.x;
-        float paddedPlotWidth = plotWidth - (AlgoVizUIMetrics.leftPadding + AlgoVizUIMetrics.rightPadding);
+        float paddedPlotWidth = PlotWidth - (AlgoVizUIMetrics.leftPadding + AlgoVizUIMetrics.rightPadding);
         float spacePerPoint = paddedPlotWidth / (values.Count - 1);
 
-        
         float minValue = float.MaxValue;
         float maxValue = float.MinValue;
 
@@ -66,28 +122,52 @@ public class Plot : MonoBehaviour
         }
 
         float range = maxValue - minValue;
+
         float rangeSegment = range / (float)AlgoVizUIMetrics.displaySegments;
-        float amountSegment = values.Count / (float)AlgoVizUIMetrics.displaySegments;
-        float paddedPlotHeight = plotHeight - (AlgoVizUIMetrics.bottomPadding + AlgoVizUIMetrics.topPadding);
+        float amountSegment = values.Count / (float)(AlgoVizUIMetrics.displaySegments);
+        float paddedPlotHeight = PlotHeight - (AlgoVizUIMetrics.bottomPadding + AlgoVizUIMetrics.topPadding);
 
         float rangeSegmentSpacing = paddedPlotHeight / (float) AlgoVizUIMetrics.displaySegments;
         float amountSegmentSpacing = paddedPlotWidth / (float) AlgoVizUIMetrics.displaySegments;
 
         float verticalSpacePerUnit = paddedPlotHeight / range;
 
-        //HEADER
-        {
-            var plotLabel = Instantiate(displaySegmentPrefab);
-            plotLabel.transform.SetParent(plotContainer, false);
-            var rT = plotLabel.GetComponent<RectTransform>();
-            rT.anchorMin = Vector2.zero;
-            rT.anchorMax = Vector2.zero;
-            rT.anchoredPosition = new Vector2(plotWidth / 2.0f, plotHeight - AlgoVizUIMetrics.topPadding * 0.3f);        
-            plotLabel.SetText(plotName);
+        CreateHeader(plotName);
+        CreateDisplaySegmentsVertical(range, minValue, values.Count, rangeSegmentSpacing);
+        CreateDisplaySegmentsHorizontal(amountSegment, amountSegmentSpacing);       
+        PlotValues(values, spacePerPoint, verticalSpacePerUnit, minValue, Color.red);
+        gameObject.SetActive(false);
+    }
 
-            displaySegments.Add(plotLabel);
-        }
+    void CreateHeader(string plotName)
+    {
+        var plotLabel = Instantiate(displaySegmentPrefab);
+        plotLabel.transform.SetParent(plotContainer, false);
+        var rT = plotLabel.GetComponent<RectTransform>();
+        rT.anchorMin = Vector2.zero;
+        rT.anchorMax = Vector2.zero;
 
+        float plotHeight = plotContainer.sizeDelta.y;
+        float plotWidth = plotContainer.sizeDelta.x;
+
+        rT.anchoredPosition = new Vector2(plotWidth / 2.0f, plotHeight - AlgoVizUIMetrics.topPadding * 0.3f);        
+        plotLabel.SetText(plotName);
+
+        displaySegments.Add(plotLabel);
+    }
+
+    void CreateDisplaySegmentsVertical(float range, float minValue, float numValues, float rangeSegmentSpacing)
+    {
+        float rangeSegment = range / (float)AlgoVizUIMetrics.displaySegments;
+        float amountSegment = numValues / (float)(AlgoVizUIMetrics.displaySegments);
+
+        int decimalPoints = 3;
+        if(range > 0.1f)
+            decimalPoints = 2;
+        if(range > 1f)
+            decimalPoints = 1;
+        if(range > 10f)
+            decimalPoints = 0;
 
         //DISPLAY SEGMENTS VERTICAL
         for (int i = 0; i < AlgoVizUIMetrics.displaySegments + 1; i++)
@@ -100,24 +180,26 @@ public class Plot : MonoBehaviour
             rT.anchorMax = Vector2.zero;
             rT.anchoredPosition = new Vector2(AlgoVizUIMetrics.labelXOffset, yPosition);
             var number = minValue + rangeSegment * i;
-            var rounded = System.Math.Round(number, 1);
+            var rounded = System.Math.Round(number, decimalPoints);
             displaySegment.SetText((float)rounded);
 
             displaySegments.Add(displaySegment);
 
             var connection = Instantiate(plotPointConnectionPrefab);
             connection.transform.SetParent(plotContainer, false);
-            connection.PlaceConnection(new Vector2(AlgoVizUIMetrics.labelXOffset, yPosition), new Vector2(plotWidth - AlgoVizUIMetrics.rightPadding, yPosition), Color.white, 1f);
+            connection.PlaceConnection(new Vector2(AlgoVizUIMetrics.leftPadding, yPosition), new Vector2(PlotWidth - AlgoVizUIMetrics.rightPadding, yPosition), Color.white, 1f);
             plotPointConnections.Add(connection);
         }
+    }
 
-        //DISPLAY SEGMENTS HORIZONTAL
+    void CreateDisplaySegmentsHorizontal(float amountSegment, float amountSegmentSpacing)
+    {
         for (int i = 0; i < AlgoVizUIMetrics.displaySegments + 1; i++)
         {
             var displaySegment = Instantiate(displaySegmentPrefab);
             displaySegment.transform.SetParent(plotContainer, false);
             var rT = displaySegment.GetComponent<RectTransform>();
-            float xPosition = i * amountSegmentSpacing;// + (rangeSegmentSpacing * 0.5f);
+            float xPosition = i * amountSegmentSpacing + AlgoVizUIMetrics.leftPadding;// + (rangeSegmentSpacing * 0.5f);
             rT.anchorMin = Vector2.zero;
             rT.anchorMax = Vector2.zero;
             rT.anchoredPosition = new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding / 2f);
@@ -129,9 +211,14 @@ public class Plot : MonoBehaviour
 
             var connection = Instantiate(plotPointConnectionPrefab);
             connection.transform.SetParent(plotContainer, false);
-            connection.PlaceConnection(new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding), new Vector2(xPosition, plotHeight - AlgoVizUIMetrics.topPadding), Color.white, 1f);
+            connection.PlaceConnection(new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding), new Vector2(xPosition, PlotHeight - AlgoVizUIMetrics.topPadding), Color.white, 1f);
             plotPointConnections.Add(connection);
-        }        
+        }     
+    }
+
+    void PlotValues(List<float> values, float spacePerPoint, float verticalSpacePerUnit, float minValue, Color color)
+    {
+        PlotPoint lastPoint = null;
 
         for (int i = 0; i < values.Count; i++)
         {
@@ -145,20 +232,20 @@ public class Plot : MonoBehaviour
             plotPoints.Add(currentPoint);
 
             if(i > 0)
-            {
-                CreateConnection(lastPoint, currentPoint);
-            }
+                CreateConnection(lastPoint, currentPoint, color);
+            
             lastPoint = currentPoint;
-        }
-        gameObject.SetActive(false);
+        }        
     }
 
-    public void CreateConnection(PlotPoint pointA, PlotPoint pointB)
+    public void CreateConnection(PlotPoint pointA, PlotPoint pointB, Color color)
     {
         var connection = Instantiate(plotPointConnectionPrefab);
         connection.transform.SetParent(plotContainer, false);
-        connection.PlaceConnection(pointA.AnchoredPosition, pointB.AnchoredPosition, Color.red, 2.2f);
+        connection.PlaceConnection(pointA.AnchoredPosition, pointB.AnchoredPosition, color, 2.2f);
 
         plotPointConnections.Add(connection);
     }
+
+    
 }

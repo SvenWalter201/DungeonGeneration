@@ -26,7 +26,17 @@ namespace PipelineV3.Maze
                 var dE = new MazeWallDesignElement(gL);
                 if(gL.AddDesignElement(dE))
                     dE.Spawn();
-            }     
+            }    
+
+            for (int j = 0, numRooms = 0; j < 1000 && numRooms < MazeBuilderMetrics.START_ROOM_AMOUNT; j++)
+            {
+                var dE = new MazeRoomDesignElement(gL);
+                if(gL.AddDesignElement(dE))
+                {
+                    dE.Spawn();
+                    numRooms++;
+                }
+            } 
 
             spawnEnvironment.FinalizeEnvironment();  
 
@@ -48,9 +58,6 @@ namespace PipelineV3.Maze
             return fitness;      
         }
 
-        const int optimalPathLength = 150, optimalCulDeSacLength = 15;
-        const float optimalFillPercentage = 0.8f;
-
         int LongestPathFitness(GenericLevel gL)
         {
             var spawnEnvironment = (MazeSpawnEnvironment)(gL.spawnEnvironment);
@@ -60,14 +67,14 @@ namespace PipelineV3.Maze
             var minLength = MazeBuilderMetrics.WIDTH + MazeBuilderMetrics.HEIGHT;
 
             float score = 0;
-            if(pathLength >= optimalPathLength)
+            if(pathLength >= MazeBuilderMetrics.OPTIMAL_PATH_LENGTH)
             {
-                var t = (pathLength - optimalPathLength) / (float)maxLength;
+                var t = (pathLength -  MazeBuilderMetrics.OPTIMAL_PATH_LENGTH) / (float)maxLength;
                 score = Mathf.Lerp(100f, 0f, t);
             }
             else
             {
-                var t = (pathLength - minLength) / (float) (optimalPathLength - minLength);
+                var t = (pathLength - minLength) / (float) ( MazeBuilderMetrics.OPTIMAL_PATH_LENGTH - minLength);
                 score = Mathf.Lerp(0f,100f, t);
             }
 
@@ -92,23 +99,23 @@ namespace PipelineV3.Maze
             var spawnEnvironment = (MazeSpawnEnvironment)(gL.spawnEnvironment);
             var grid = spawnEnvironment.grid;
             float fitness = 0;
-            var maxCulDeSac = optimalCulDeSacLength * 2; //at two or more times the optimal length, CulDeSac's don't give any fitness points
+            var maxCulDeSac = MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH * 2; //at two or more times the optimal length, CulDeSac's don't give any fitness points
             foreach (var cell in grid)
             {
                 if(!cell.isCulDeSac)
                     continue;
 
-                if(cell.culDeSacLength >= optimalCulDeSacLength)
+                if(cell.culDeSacLength >= MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH)
                 {
                     //20 optimum 10 max 30
                     //15 optimum 5 max 30
-                    float t = (cell.culDeSacLength - optimalCulDeSacLength) / (float)(maxCulDeSac - optimalCulDeSacLength);
+                    float t = (cell.culDeSacLength - MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH) / (float)(maxCulDeSac - MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH);
                     fitness += Mathf.Lerp(100, 0, t);
                 }
                 else
                 {
                     //5 optimum 15 max 30
-                    float t = cell.culDeSacLength / (float)optimalCulDeSacLength;
+                    float t = cell.culDeSacLength / (float)MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH;
                     fitness += Mathf.Lerp(0,100,t);
                 }
             }
@@ -130,14 +137,14 @@ namespace PipelineV3.Maze
             }
 
             var fillPercentage = fillAmount / (float)totalCount;
-            if(fillPercentage >= optimalFillPercentage)
+            if(fillPercentage >= MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE)
             {
-                var t = (fillPercentage - optimalFillPercentage) / (float)(1 - optimalFillPercentage);
+                var t = (fillPercentage - MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE) / (float)(1 - MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE);
                 return Mathf.RoundToInt(Mathf.Lerp(100,0,t));
             }
             else
             {
-                var t = fillPercentage / optimalFillPercentage;
+                var t = fillPercentage / MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE;
                 return Mathf.RoundToInt(Mathf.Lerp(0,100,t));
             }
         }

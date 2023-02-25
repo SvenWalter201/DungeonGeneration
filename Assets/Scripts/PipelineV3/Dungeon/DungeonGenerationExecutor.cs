@@ -19,6 +19,6 @@ public class DungeonGenerationExecutor : EvolutionaryAlgorithmExecutor
         };
 
         var l1 = new DungeonGenerator(genericParams);
-        var r1 = l1.Run(null);
+        var r1 = l1.Run(1, descriptor, null);
         InputHandler.Instance.eaExecuting = false;    }
 }

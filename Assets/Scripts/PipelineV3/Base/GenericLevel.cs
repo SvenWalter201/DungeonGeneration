@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace PipelineV3
 {
@@ -25,8 +26,17 @@ public class GenericLevel : System.IComparable<GenericLevel>
 		public SpawnEnvironment spawnEnvironment;
 		Mutation mutationFunction;
 		Crossover crossoverFunction;
-		public int fitness, violatedConstraints;
+		public int fitness = 0, violatedConstraints = 0; 
 		public bool canBeSelected, recentlyAdded = false;
+
+		//values for evaluating crossoverMetrics
+		public int fitnessBeforeMutation = 0, violatedConstraintsBeforeMutation = 0;
+		public bool swappedPopulationDuringCrossover = false;
+		public void StoreCrossoverValues()
+		{
+			fitnessBeforeMutation = fitness;
+			violatedConstraintsBeforeMutation = violatedConstraints;
+		}
 
         public int TotalDesignElementCount 
         {
@@ -45,9 +55,9 @@ public class GenericLevel : System.IComparable<GenericLevel>
 			return crossoverFunction.CrossoverFunc(this, other);
 		}
 
-		public void Mutate()
+		public int2 Mutate()
 		{
-			mutationFunction.Mutate(this);
+			return mutationFunction.Mutate(this);
 		}
 
         public int GetCountOfDesignElementsOfType<D>() where D : DesignElement
@@ -91,6 +101,22 @@ public class GenericLevel : System.IComparable<GenericLevel>
                 AddDesignElement(de);
             
         }
+
+		public void ReplaceDesignElement(DesignElement original, DesignElement newElement)
+		{
+			var type = original.GetType();
+            if(sortedList.ContainsKey(type))
+            {
+                if(!sortedList[type].Remove(original))
+					Debug.LogWarning($"Tried to remove DesignElement of Type: {type.ToString()}, but level did not contain it");
+				
+				sortedList[type].Add(newElement);
+            }
+            else
+            {
+                Debug.LogWarning($"Tried to remove DesignElement of Type: {type.ToString()}, but level does not contain elements of that type");
+            }
+		}
 
 		public bool AddDesignElement(DesignElement designElement)
 		{

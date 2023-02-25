@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using PipelineV3;
+using Unity.Mathematics;
 
 namespace PipelineV3.Dungeon
 {
@@ -49,9 +46,8 @@ namespace PipelineV3.Dungeon
 
     public class DungeonMutation : Mutation
     {
-        public override void Mutate(GenericLevel genericLevel)
+        protected override void MutateImpl(GenericLevel genericLevel)
         {
-            
         }
     }
 
