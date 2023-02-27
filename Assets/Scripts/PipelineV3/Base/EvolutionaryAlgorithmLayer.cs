@@ -8,7 +8,8 @@ namespace PipelineV3
 		//SingleTournamentSelection, 
 		//DoubleTournamentSelection, 
 		RouletteSelection, 
-		RankSelection
+		RankSelection,
+		AbsoluteFitnessSelection
 	}
 
 	public enum InsertionStrategy
@@ -39,8 +40,8 @@ namespace PipelineV3
 
 			
 		public abstract bool TerminationCondition();
-		public abstract int CalculateFitness(GenericLevel gL);
-		public abstract int CalculateConstraintViolations(GenericLevel gL);
+		public abstract float CalculateFitness(GenericLevel gL);
+		public abstract float CalculateConstraintViolations(GenericLevel gL);
 		protected virtual void EndOfGenerationCallback(GenerationInformation currentGeneration){}
 		protected virtual void ExecutionFinishedCallback(int currentGeneration){}
 
@@ -61,14 +62,15 @@ namespace PipelineV3
 			return children;
 		}
 
-		public float2 SortIntoPools(bool creatorIsFPop, List<GenericLevel> members)
+		public float3 SortIntoPools(bool creatorIsFPop, List<GenericLevel> members)
 		{
 			int swappedMembers = 0;
-			int summedDelta = 0;
+			float summedDelta = 0;
+			float bestDelta = 0;
 			int summedRelevantMembers = 0;
 			foreach (var member in members)
 			{
-				int constraintViolations = CalculateConstraintViolations(member);
+				float constraintViolations = CalculateConstraintViolations(member);
 				if(constraintViolations > 0)
 				{
 					iPool.Add(member);
@@ -76,23 +78,31 @@ namespace PipelineV3
 						swappedMembers++;
 					else if(!member.swappedPopulationDuringCrossover)
 					{
-						summedDelta += (constraintViolations - member.violatedConstraintsBeforeMutation);
+						var delta = constraintViolations - member.violatedConstraintsBeforeMutation;
+						summedDelta += delta;
 						summedRelevantMembers++;
+
+						if(delta < bestDelta)
+							bestDelta = delta;
+							
 					}
 					continue;
 				}
-				int fitness = CalculateFitness(member);
+				float fitness = CalculateFitness(member);
 				fPool.Add(member);
 				if(!creatorIsFPop)
 					swappedMembers++;
 				else if(!member.swappedPopulationDuringCrossover)
 				{
-					summedDelta += (fitness - member.fitnessBeforeMutation);
+					var delta = fitness - member.fitnessBeforeMutation;
+					summedDelta += delta;
 					summedRelevantMembers++;
+					if(delta > bestDelta)
+						bestDelta = delta;
 				}
 				
 			}			
-			return new float2(swappedMembers, summedDelta / (float)summedRelevantMembers);
+			return new float3(swappedMembers, summedDelta / (float)summedRelevantMembers, bestDelta);
 		}
 
 		public int PreMutationMeasures(List<GenericLevel> members, bool creatorIsFPop)
@@ -100,7 +110,7 @@ namespace PipelineV3
 			int swappedMembers = 0;
 			foreach (var member in members)
 			{
-				int constraintViolations = CalculateConstraintViolations(member);	
+				float constraintViolations = CalculateConstraintViolations(member);	
 				if(constraintViolations == 0)
 				{
 					CalculateFitness(member);
@@ -129,6 +139,8 @@ namespace PipelineV3
 		{
             iPop = new Population(genericParams, genericParams.populationSize, false);
             fPop = new Population(genericParams, genericParams.populationSize, true);
+			iPool = new List<GenericLevel>();
+			fPool = new List<GenericLevel>();
 
 			int attempt = 0;
 			while(attempt < maxInitializationAttempts && fPop.Count < genericParams.populationSize)
@@ -191,7 +203,7 @@ namespace PipelineV3
 				generationInformation.invalidationRate = fOffspring.Count > 0 ? sortingResults.x / (float)fOffspring.Count : 0;
 				generationInformation.mutationInvalidationRate = invalidOffspringBeforeMutations > 0 ? sortingResults.x / (float)invalidOffspringBeforeMutations : 0;
 				generationInformation.averageMutationFitnessDelta = sortingResults.y;
-				
+				generationInformation.maxFDelta = sortingResults.z;
 				var newIPopMembers = iPop.AddAndReduce(iPool);
 				generationInformation.iPopIntegrationRate = iPool.Count > 0 ? newIPopMembers / (float)iPool.Count : 0;
 
@@ -210,6 +222,7 @@ namespace PipelineV3
 				generationInformation.validationRate = iOffspring.Count > 0 ? sortingResults.x / (float)iOffspring.Count : 0;
 				generationInformation.mutationValidationRate = validOffspringBeforeMutations > 0 ? sortingResults.x / (float)validOffspringBeforeMutations : 0;
 				generationInformation.averageMutationConstraintViolationDelta = sortingResults.y;
+				generationInformation.minCDelta = sortingResults.z;
 
 				var newFPopMembers = fPop.AddAndReduce(fPool);
 				generationInformation.fPopIntegrationRate = fPool.Count > 0 ? newFPopMembers / (float)fPool.Count : 0;
@@ -240,6 +253,9 @@ namespace PipelineV3
 		public float crossoverInvalidationRate; //at what rate do crossovers invalidate existing valid levels
 		public float averageMutationFitnessDelta;
 		public float averageMutationConstraintViolationDelta;
+
+		public float maxFDelta;
+		public float minCDelta;
 		
 	}
 }

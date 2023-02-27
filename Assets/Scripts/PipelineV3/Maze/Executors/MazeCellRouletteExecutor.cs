@@ -1,7 +1,7 @@
 using PipelineV3;
 using PipelineV3.Maze;
 
-public class MazeCellLayoutExecutor : EvolutionaryAlgorithmExecutor
+public class MazeCellRouletteExecutor : EvolutionaryAlgorithmExecutor
 {
     public override void Execute()
     {
@@ -14,15 +14,16 @@ public class MazeCellLayoutExecutor : EvolutionaryAlgorithmExecutor
 
     public GenericParameters Layout1()
     {
+        MazeBuilderMetrics.ResetMetrics();
         MazeBuilderMetrics.WIDTH = 30;
         MazeBuilderMetrics.HEIGHT = 30;
         MazeBuilderMetrics.POP_SIZE = 40;
         MazeBuilderMetrics.MAX_GENERATIONS = 1000;
         MazeBuilderMetrics.MAX_CROSSOVERS = 10;
 
-        MazeBuilderMetrics.OPTIMAL_PATH_LENGTH = 150;
-        MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH = 150;
-        MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE = 150;
+        MazeBuilderMetrics.OPTIMAL_PATH_LENGTH = 120;
+        MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH = 16;
+        MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE = 0.46f;
 
         MazeBuilderMetrics.START_FILL_PERCENTAGE = 0.5f;
         MazeBuilderMetrics.TILE_SHIFT_PROBABILITY = 0.02f;
@@ -34,9 +35,8 @@ public class MazeCellLayoutExecutor : EvolutionaryAlgorithmExecutor
             maxCrossovers = MazeBuilderMetrics.MAX_CROSSOVERS,
             populationSize = MazeBuilderMetrics.POP_SIZE,
             maxGenerations = MazeBuilderMetrics.MAX_GENERATIONS,
-            selectionStrategy = SelectionStrategy.RankSelection,
-            insertionStrategy = InsertionStrategy.RouletteReplacement,
-            populationTransitionStrategy = InsertionStrategy.RandomEliteReplacement
+            selectionStrategy = SelectionStrategy.AbsoluteFitnessSelection,
+            insertionStrategy = InsertionStrategy.RouletteReplacement
         };
     }
 }

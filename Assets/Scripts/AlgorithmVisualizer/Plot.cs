@@ -34,11 +34,11 @@ public class Plot : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void CreateMultiPlot(string plotName, List<List<float>> plots) => 
-        StartCoroutine(CreateMultiPlotDelayed(plotName, plots));
+    public void CreateMultiPlot(string plotName, List<string> plotLabels, List<List<float>> plots) => 
+        StartCoroutine(CreateMultiPlotDelayed(plotName, plotLabels, plots));
     
 
-    IEnumerator CreateMultiPlotDelayed(string plotName, List<List<float>> plots)
+    IEnumerator CreateMultiPlotDelayed(string plotName, List<string> plotLabels, List<List<float>> plots)
     {
         int delayFrames = 3;
         while(delayFrames > 0)
@@ -89,15 +89,41 @@ public class Plot : MonoBehaviour
             idx++;
         }
 
+        //Labels
+        for (int i = 0; i < plots.Count; i++)
+        {
+            float xPosition = PlotWidth - (AlgoVizUIMetrics.rightPadding - 30);
+            float yPosition = AlgoVizUIMetrics.bottomPadding + i * 35;// + (rangeSegmentSpacing * 0.5f);
+
+            var colorBubble = Instantiate(plotPointConnectionPrefab);
+            colorBubble.transform.SetParent(plotContainer, false);
+            colorBubble.PlaceConnection(new Vector2(xPosition, yPosition), new Vector2(xPosition + 50f, yPosition), colors[i], 20f);
+            plotPointConnections.Add(colorBubble);
+
+            var displaySegment = Instantiate(displaySegmentPrefab);
+            displaySegment.transform.SetParent(plotContainer, false);
+            var rT = displaySegment.GetComponent<RectTransform>();
+            rT.anchorMin = Vector2.zero;
+            rT.anchorMax = Vector2.zero;
+            rT.anchoredPosition = new Vector2(xPosition + 87f, yPosition);
+            displaySegment.SetText(plotLabels[i]);
+            displaySegments.Add(displaySegment);
+
+
+        }
+
+
         gameObject.SetActive(false);
     }
 
-    Color[] colors = new Color[]{Color.red, Color.cyan, Color.magenta};
+    Color[] colors = new Color[]{Color.red, Color.blue, Color.magenta, Color.green};
     public void CreatePlot(string plotName, List<float> values) =>     
         StartCoroutine(CreatePlotDelayed(plotName, values));
 
     float PlotWidth => plotContainer.sizeDelta.x;
     float PlotHeight => plotContainer.sizeDelta.y;
+    float PaddedWidth => PlotWidth - AlgoVizUIMetrics.leftPadding - AlgoVizUIMetrics.rightPadding;
+    float PaddedHeight => PlotHeight - AlgoVizUIMetrics.topPadding - AlgoVizUIMetrics.bottomPadding;
 
     IEnumerator CreatePlotDelayed(string plotName, List<float> values)
     {
@@ -107,8 +133,7 @@ public class Plot : MonoBehaviour
             delayFrames--;
             yield return null;
         }
-        float paddedPlotWidth = PlotWidth - (AlgoVizUIMetrics.leftPadding + AlgoVizUIMetrics.rightPadding);
-        float spacePerPoint = paddedPlotWidth / (values.Count - 1);
+        float spacePerPoint = PaddedWidth / (values.Count - 1);
 
         float minValue = float.MaxValue;
         float maxValue = float.MinValue;
@@ -125,12 +150,11 @@ public class Plot : MonoBehaviour
 
         float rangeSegment = range / (float)AlgoVizUIMetrics.displaySegments;
         float amountSegment = values.Count / (float)(AlgoVizUIMetrics.displaySegments);
-        float paddedPlotHeight = PlotHeight - (AlgoVizUIMetrics.bottomPadding + AlgoVizUIMetrics.topPadding);
 
-        float rangeSegmentSpacing = paddedPlotHeight / (float) AlgoVizUIMetrics.displaySegments;
-        float amountSegmentSpacing = paddedPlotWidth / (float) AlgoVizUIMetrics.displaySegments;
+        float rangeSegmentSpacing = PaddedHeight / (float) AlgoVizUIMetrics.displaySegments;
+        float amountSegmentSpacing = PaddedWidth / (float) AlgoVizUIMetrics.displaySegments;
 
-        float verticalSpacePerUnit = paddedPlotHeight / range;
+        float verticalSpacePerUnit = PaddedHeight / range;
 
         CreateHeader(plotName);
         CreateDisplaySegmentsVertical(range, minValue, values.Count, rangeSegmentSpacing);
@@ -146,11 +170,9 @@ public class Plot : MonoBehaviour
         var rT = plotLabel.GetComponent<RectTransform>();
         rT.anchorMin = Vector2.zero;
         rT.anchorMax = Vector2.zero;
-
-        float plotHeight = plotContainer.sizeDelta.y;
-        float plotWidth = plotContainer.sizeDelta.x;
-
-        rT.anchoredPosition = new Vector2(plotWidth / 2.0f, plotHeight - AlgoVizUIMetrics.topPadding * 0.3f);        
+        var yPosition = (PaddedHeight + AlgoVizUIMetrics.bottomPadding) * 0.45f;
+        rT.anchoredPosition = new Vector2(AlgoVizUIMetrics.leftPadding * 0.1f, yPosition);// - AlgoVizUIMetrics.topPadding * 0.3f);   
+        rT.rotation = Quaternion.Euler(0,0,90);     
         plotLabel.SetText(plotName);
 
         displaySegments.Add(plotLabel);
@@ -178,7 +200,7 @@ public class Plot : MonoBehaviour
             float yPosition = i * rangeSegmentSpacing + AlgoVizUIMetrics.bottomPadding;// + (rangeSegmentSpacing * 0.5f);
             rT.anchorMin = Vector2.zero;
             rT.anchorMax = Vector2.zero;
-            rT.anchoredPosition = new Vector2(AlgoVizUIMetrics.labelXOffset, yPosition);
+            rT.anchoredPosition = new Vector2(AlgoVizUIMetrics.leftPadding * 0.8f, yPosition);
             var number = minValue + rangeSegment * i;
             var rounded = System.Math.Round(number, decimalPoints);
             displaySegment.SetText((float)rounded);
@@ -187,7 +209,7 @@ public class Plot : MonoBehaviour
 
             var connection = Instantiate(plotPointConnectionPrefab);
             connection.transform.SetParent(plotContainer, false);
-            connection.PlaceConnection(new Vector2(AlgoVizUIMetrics.leftPadding, yPosition), new Vector2(PlotWidth - AlgoVizUIMetrics.rightPadding, yPosition), Color.white, 1f);
+            connection.PlaceConnection(new Vector2(AlgoVizUIMetrics.leftPadding, yPosition), new Vector2(PlotWidth - AlgoVizUIMetrics.rightPadding, yPosition), Color.grey, 1f);
             plotPointConnections.Add(connection);
         }
     }
@@ -202,7 +224,7 @@ public class Plot : MonoBehaviour
             float xPosition = i * amountSegmentSpacing + AlgoVizUIMetrics.leftPadding;// + (rangeSegmentSpacing * 0.5f);
             rT.anchorMin = Vector2.zero;
             rT.anchorMax = Vector2.zero;
-            rT.anchoredPosition = new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding / 2f);
+            rT.anchoredPosition = new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding * 0.8f);
             var number = amountSegment * i;
             var rounded = System.Math.Round(number, 1);
             displaySegment.SetText((float)rounded);
@@ -211,9 +233,20 @@ public class Plot : MonoBehaviour
 
             var connection = Instantiate(plotPointConnectionPrefab);
             connection.transform.SetParent(plotContainer, false);
-            connection.PlaceConnection(new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding), new Vector2(xPosition, PlotHeight - AlgoVizUIMetrics.topPadding), Color.white, 1f);
+            connection.PlaceConnection(new Vector2(xPosition, AlgoVizUIMetrics.bottomPadding), new Vector2(xPosition, PlotHeight - AlgoVizUIMetrics.topPadding), Color.grey, 1f);
             plotPointConnections.Add(connection);
-        }     
+        }  
+        {
+            var axisDescription = Instantiate(displaySegmentPrefab);
+            axisDescription.transform.SetParent(plotContainer, false);
+            var rT = axisDescription.GetComponent<RectTransform>(); 
+            float xPosition = (PaddedWidth + AlgoVizUIMetrics.leftPadding) * 0.5f;
+            float yPosition = AlgoVizUIMetrics.bottomPadding * 0.45f;
+            rT.anchorMin = Vector2.zero;
+            rT.anchorMax = Vector2.zero;
+            rT.anchoredPosition = new Vector2(xPosition, yPosition);
+            axisDescription.SetTextCenterAligned("Generations");
+        }
     }
 
     void PlotValues(List<float> values, float spacePerPoint, float verticalSpacePerUnit, float minValue, Color color)
@@ -242,7 +275,7 @@ public class Plot : MonoBehaviour
     {
         var connection = Instantiate(plotPointConnectionPrefab);
         connection.transform.SetParent(plotContainer, false);
-        connection.PlaceConnection(pointA.AnchoredPosition, pointB.AnchoredPosition, color, 2.2f);
+        connection.PlaceConnection(pointA.AnchoredPosition, pointB.AnchoredPosition, color, 1.7f);
 
         plotPointConnections.Add(connection);
     }

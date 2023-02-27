@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PipelineV3.Maze
@@ -14,7 +12,7 @@ namespace PipelineV3.Maze
             //AlgoViz.CreatePlot("amountDE");
             //AlgoViz.CreatePlot("amountWalls");
             AlgoViz.CreateMultiPlot("invalidationRate");
-            AlgoViz.CreateMultiPlot("validationRate");
+            AlgoViz.CreateMultiPlot("vRate");
             AlgoViz.CreateMultiPlot("iPopIntegrationRate");
             AlgoViz.CreateMultiPlot("fPopIntegrationRate");
             AlgoViz.CreateMultiPlot("diversityIPop");
@@ -25,6 +23,8 @@ namespace PipelineV3.Maze
             AlgoViz.CreateMultiPlot("mutInvalidationRate");
             AlgoViz.CreateMultiPlot("fitnessDelta");
             AlgoViz.CreateMultiPlot("constraintDelta");
+            AlgoViz.CreateMultiPlot("min Const. Delta");
+            AlgoViz.CreateMultiPlot("max Fit. Delta");
 
         }
 
@@ -54,7 +54,7 @@ namespace PipelineV3.Maze
             //AlgoViz.AddPlotPoint("amountDE", averageDEs);
             //AlgoViz.AddPlotPoint("amountWalls", averageWalls);
             AlgoViz.AddPlotPoint(label + "invalidationRate", generationInformation.invalidationRate);
-            AlgoViz.AddPlotPoint(label + "validationRate", generationInformation.validationRate);
+            AlgoViz.AddPlotPoint(label + "vRate", generationInformation.validationRate);
             AlgoViz.AddPlotPoint(label + "iPopIntegrationRate", generationInformation.iPopIntegrationRate);
             AlgoViz.AddPlotPoint(label + "fPopIntegrationRate", generationInformation.fPopIntegrationRate);
             AlgoViz.AddPlotPoint(label + "avgMutF", generationInformation.averageAcceptedMutationRateFOffspring);
@@ -63,6 +63,8 @@ namespace PipelineV3.Maze
             AlgoViz.AddPlotPoint(label + "mutInvalidationRate", generationInformation.mutationInvalidationRate);
             AlgoViz.AddPlotPoint(label + "fitnessDelta", generationInformation.averageMutationFitnessDelta);
             AlgoViz.AddPlotPoint(label + "constraintDelta", generationInformation.averageMutationConstraintViolationDelta);
+            AlgoViz.AddPlotPoint(label + "min Const. Delta", generationInformation.minCDelta);
+            AlgoViz.AddPlotPoint(label + "max Fit. Delta", generationInformation.maxFDelta);
 
             DetermineGeneticDiversity();
 
@@ -159,8 +161,8 @@ namespace PipelineV3.Maze
                         color = occupiedColor;
                     else if(cell.partOfOptimalPath)
                         color = optimalPathColor;
-                    else if(cell.isCulDeSac)
-                        color = culDeSacColor;
+                    //else if(cell.isCulDeSac)
+                    //    color = culDeSacColor;
                     else 
                         color = freeColor;
                             
@@ -235,8 +237,8 @@ namespace PipelineV3.Maze
                                     color = occupiedColor;
                                 else if(cell.partOfOptimalPath)
                                     color = optimalPathColor;
-                                else if(cell.isCulDeSac)
-                                    color = culDeSacColor;
+                                //else if(cell.isCulDeSac)
+                                //    color = culDeSacColor;
                                 else 
                                     color = freeColor;
                             }

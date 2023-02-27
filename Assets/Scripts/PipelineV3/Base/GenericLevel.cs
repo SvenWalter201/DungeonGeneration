@@ -26,11 +26,11 @@ public class GenericLevel : System.IComparable<GenericLevel>
 		public SpawnEnvironment spawnEnvironment;
 		Mutation mutationFunction;
 		Crossover crossoverFunction;
-		public int fitness = 0, violatedConstraints = 0; 
+		public float fitness = 0, violatedConstraints = 0; 
 		public bool canBeSelected, recentlyAdded = false;
 
 		//values for evaluating crossoverMetrics
-		public int fitnessBeforeMutation = 0, violatedConstraintsBeforeMutation = 0;
+		public float fitnessBeforeMutation = 0, violatedConstraintsBeforeMutation = 0;
 		public bool swappedPopulationDuringCrossover = false;
 		public void StoreCrossoverValues()
 		{

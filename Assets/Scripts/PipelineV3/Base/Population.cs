@@ -48,6 +48,10 @@ namespace PipelineV3
 					case SelectionStrategy.RankSelection:
 						selectedLevel = RankSelect();
 						break;
+					
+					case SelectionStrategy.AbsoluteFitnessSelection:
+						selectedLevel = members[i];
+						break;
 				
 				}
 				selectedLevel.canBeSelected = false;

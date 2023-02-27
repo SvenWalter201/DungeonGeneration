@@ -102,16 +102,21 @@ public class AlgoViz : MonoBehaviour
             return;
 
         var plots = new List<List<float>>();
-
+        var labels = new List<string>();
         foreach(var key in Instance.plots.Keys)
         {
             if(key.Contains(suffix))
+            {
                 plots.Add(Instance.plots[key]);
+                var to = key.IndexOf(suffix);
+                string prefix = key.Substring(0, to);
+                labels.Add(prefix);
+            }
         }
 
         if(plots.Count > 0)
         {
-            Instance.uiReference.CreateMultiPlot(suffix, plots);
+            Instance.uiReference.CreateMultiPlot(suffix, labels, plots);
         }
         else
         {

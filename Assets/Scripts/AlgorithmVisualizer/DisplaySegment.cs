@@ -20,6 +20,12 @@ public class DisplaySegment : MonoBehaviour
         text.text = number.ToString();
     }
 
+    public void SetTextCenterAligned(string text)
+    {
+        this.text.text = text;
+        this.text.horizontalAlignment = HorizontalAlignmentOptions.Center;
+    }
+
     public void SetText(string text) 
     {
         this.text.text = text;

@@ -76,7 +76,7 @@ public class AlgoVizUI : MonoBehaviour
         plots.Clear();
     }
     
-    public void CreateMultiPlot(string plotName, List<List<float>> values)
+    public void CreateMultiPlot(string plotName, List<string> plotLabels, List<List<float>> values)
     {
         int index = plots.Count;
 
@@ -91,7 +91,7 @@ public class AlgoVizUI : MonoBehaviour
 
         var plotInstance = Instantiate(plotPrefab);
         plotInstance.transform.SetParent(plotContainer, false);
-        plotInstance.CreateMultiPlot(plotName, values);
+        plotInstance.CreateMultiPlot(plotName, plotLabels, values);
         plots.Add(plotInstance);
     }
 
@@ -229,7 +229,7 @@ public static class AlgoVizUIMetrics
 {
     public static int displaySegments = 10;
     public static float labelXOffset = 30;
-    public static float leftPadding = 80, rightPadding = 30;
+    public static float leftPadding = 120, rightPadding = 330;
     public static float topPadding = 50;
-    public static float bottomPadding = 25;
+    public static float bottomPadding = 75;
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace PipelineV3.Maze
 {
@@ -48,17 +49,19 @@ namespace PipelineV3.Maze
             return false;
         }
 
-        public override int CalculateFitness(GenericLevel gL)
+        public override float CalculateFitness(GenericLevel gL)
         {
-            var fitness = CulDeSacLengthFitness(gL);
-            var culDeSacAmount = CulDeSacAmountFitness(gL);
-            fitness += LongestPathFitness(gL) * culDeSacAmount;
-            //fitness = OptimalFillFitness(gL);
+            var fitness = 0f;//CulDeSacLengthFitness(gL);
+            //var culDeSacAmount = CulDeSacAmountFitness(gL);
+            fitness += LongestPathFitness(gL);
+            fitness += OptimalFillFitness(gL);
+            fitness += CulDeSacClusterLengthFitness(gL);
+            fitness *= 0.333f;
             gL.fitness = fitness; 
             return fitness;      
         }
 
-        int LongestPathFitness(GenericLevel gL)
+        float LongestPathFitness(GenericLevel gL)
         {
             var spawnEnvironment = (MazeSpawnEnvironment)(gL.spawnEnvironment);
             var grid = spawnEnvironment.grid;
@@ -70,15 +73,15 @@ namespace PipelineV3.Maze
             if(pathLength >= MazeBuilderMetrics.OPTIMAL_PATH_LENGTH)
             {
                 var t = (pathLength -  MazeBuilderMetrics.OPTIMAL_PATH_LENGTH) / (float)maxLength;
-                score = Mathf.Lerp(100f, 0f, t);
+                score = Mathf.Lerp(1f, 0f, t);
             }
             else
             {
                 var t = (pathLength - minLength) / (float) ( MazeBuilderMetrics.OPTIMAL_PATH_LENGTH - minLength);
-                score = Mathf.Lerp(0f,100f, t);
+                score = Mathf.Lerp(0f,1f, t);
             }
 
-            return Mathf.RoundToInt(score);
+            return score;
         }
 
         int CulDeSacAmountFitness(GenericLevel gL)
@@ -94,36 +97,75 @@ namespace PipelineV3.Maze
             return count;
         }
 
-        int CulDeSacLengthFitness(GenericLevel gL)
+        float CulDeSacLengthFitness(GenericLevel gL)
         {
             var spawnEnvironment = (MazeSpawnEnvironment)(gL.spawnEnvironment);
             var grid = spawnEnvironment.grid;
             float fitness = 0;
-            var maxCulDeSac = MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH * 2; //at two or more times the optimal length, CulDeSac's don't give any fitness points
+
+             //at two or more times the optimal length, CulDeSac's don't give any fitness points
             foreach (var cell in grid)
             {
                 if(!cell.isCulDeSac)
                     continue;
 
-                if(cell.culDeSacLength >= MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH)
+                fitness += GetCulDeSacScore(cell.culDeSacLength);
+            }
+
+            return fitness / (float)CulDeSacAmountFitness(gL);
+        }
+
+        const int clusterAmount = 5;
+        float CulDeSacClusterLengthFitness(GenericLevel gL)
+        {
+            var spawnEnvironment = (MazeSpawnEnvironment)(gL.spawnEnvironment);
+            var grid = spawnEnvironment.grid;
+
+            int[,] clusters = new int[clusterAmount,clusterAmount];
+            int xDivisor = MazeBuilderMetrics.WIDTH / clusterAmount;
+            int yDivisor = MazeBuilderMetrics.HEIGHT / clusterAmount;
+            float fitness = 0;
+             //at two or more times the optimal length, CulDeSac's don't give any fitness points
+            foreach (var cell in grid)
+            {
+                if(!cell.isCulDeSac)
+                    continue;
+
+                int2 clusterCoordinate = new int2(cell.X / xDivisor, cell.Y / yDivisor);
+                if(cell.culDeSacLength > clusters[clusterCoordinate.x, clusterCoordinate.y])
+                    clusters[clusterCoordinate.x, clusterCoordinate.y] = cell.culDeSacLength;
+            }
+
+            for (int x = 0; x < clusterAmount; x++)
+            {
+                for (int y = 0; y < clusterAmount; y++)
+                {
+                    fitness += GetCulDeSacScore(clusters[x,y]);
+
+                }
+            }
+            return fitness / (float)(clusterAmount * clusterAmount);
+        }
+
+        float GetCulDeSacScore(int culDeSacLength)
+        {
+            var maxCulDeSac = MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH * 2;
+                if(culDeSacLength >= MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH)
                 {
                     //20 optimum 10 max 30
                     //15 optimum 5 max 30
-                    float t = (cell.culDeSacLength - MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH) / (float)(maxCulDeSac - MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH);
-                    fitness += Mathf.Lerp(100, 0, t);
+                    float t = (culDeSacLength - MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH) / (float)(maxCulDeSac - MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH);
+                    return Mathf.Lerp(1f, 0f, t);
                 }
                 else
                 {
                     //5 optimum 15 max 30
-                    float t = cell.culDeSacLength / (float)MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH;
-                    fitness += Mathf.Lerp(0,100,t);
+                    float t = culDeSacLength / (float)MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH;
+                    return Mathf.Lerp(0f,1f,t);
                 }
-            }
-
-            return Mathf.RoundToInt(fitness);
         }
 
-        int OptimalFillFitness(GenericLevel gL)
+        float OptimalFillFitness(GenericLevel gL)
         {
             var spawnEnvironment = (MazeSpawnEnvironment)(gL.spawnEnvironment);
             var grid = spawnEnvironment.grid;            
@@ -140,16 +182,16 @@ namespace PipelineV3.Maze
             if(fillPercentage >= MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE)
             {
                 var t = (fillPercentage - MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE) / (float)(1 - MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE);
-                return Mathf.RoundToInt(Mathf.Lerp(100,0,t));
+                return Mathf.Lerp(1f,0f,t);
             }
             else
             {
                 var t = fillPercentage / MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE;
-                return Mathf.RoundToInt(Mathf.Lerp(0,100,t));
+                return Mathf.Lerp(0f,1f,t);
             }
         }
 
-        public override int CalculateConstraintViolations(GenericLevel gL)
+        public override float CalculateConstraintViolations(GenericLevel gL)
         {
             var violatedConstraints = ReachablePercentageConstraint(gL);
             violatedConstraints += KeyPointsReachableConstraint(gL);

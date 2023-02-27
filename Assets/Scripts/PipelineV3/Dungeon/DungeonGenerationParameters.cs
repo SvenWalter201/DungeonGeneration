@@ -24,12 +24,12 @@ namespace PipelineV3.Dungeon
             return false;
         }
 
-        public override int CalculateConstraintViolations(GenericLevel gL)
+        public override float CalculateConstraintViolations(GenericLevel gL)
         {
             return 0;
         }
 
-        public override int CalculateFitness(GenericLevel gL)
+        public override float CalculateFitness(GenericLevel gL)
         {
             return 0;
         }

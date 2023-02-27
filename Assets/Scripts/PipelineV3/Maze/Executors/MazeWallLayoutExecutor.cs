@@ -14,11 +14,16 @@ public class MazeWallLayoutExecutor : EvolutionaryAlgorithmExecutor
 
     public GenericParameters Layout2()
     {
+        MazeBuilderMetrics.ResetMetrics();
         MazeBuilderMetrics.WIDTH = 30;
         MazeBuilderMetrics.HEIGHT = 30;
         MazeBuilderMetrics.POP_SIZE = 40;
         MazeBuilderMetrics.MAX_GENERATIONS = 1000;
         MazeBuilderMetrics.MAX_CROSSOVERS = 10;
+
+        MazeBuilderMetrics.OPTIMAL_PATH_LENGTH = 120;
+        MazeBuilderMetrics.OPTIMAL_CUL_DE_SAC_LENGTH = 16;
+        MazeBuilderMetrics.OPTIMAL_FILL_PERCENTAGE = 0.42f;
 
         MazeBuilderMetrics.START_WALL_AMOUNT = 20;
         MazeBuilderMetrics.MAX_WALL_LENGTH = 30;
@@ -34,8 +39,7 @@ public class MazeWallLayoutExecutor : EvolutionaryAlgorithmExecutor
             populationSize = MazeBuilderMetrics.POP_SIZE,
             maxGenerations = MazeBuilderMetrics.MAX_GENERATIONS,
             selectionStrategy = SelectionStrategy.RankSelection,
-            insertionStrategy = InsertionStrategy.RankReplacement,
-            populationTransitionStrategy = InsertionStrategy.RandomEliteReplacement
+            insertionStrategy = InsertionStrategy.RankReplacement
         };
     }	   
 }
